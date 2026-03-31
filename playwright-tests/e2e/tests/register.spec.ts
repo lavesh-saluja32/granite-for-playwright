@@ -1,22 +1,35 @@
-import { test } from "../fixtures";
+// e2e/tests/register.spec.ts
+
+import { LOGIN_SELECTORS, SIGNUP_SELECTORS } from "@selectors";
+import { test } from "@fixtures";
 import { faker } from "@faker-js/faker";
 
-test.describe("Registration page", () => {
+test.describe("Register page", () => {
+  let username: string, email: string, password: string;
+
+  test.beforeEach(() => {
+    username = faker.person.fullName();
+    email = faker.internet.email();
+    password = faker.internet.password();
+  });
+
   test("should register a new user", async ({ page, loginPage }) => {
-    const username = faker.person.fullName();
-    const email = faker.internet.email();
-    const password = faker.internet.password();
+    await test.step("Step 1: Visit register page", async () => {
+      await page.goto("/");
+      await page.getByTestId(LOGIN_SELECTORS.registerButton).click();
+    });
 
-    await page.goto("http://localhost:3000/");
+    await test.step("Step 2: Fill user details and credentials", async () => {
+      await page.getByTestId(SIGNUP_SELECTORS.nameField).fill(username);
+      await page.getByTestId(SIGNUP_SELECTORS.emailField).fill(email);
+      await page.getByTestId(SIGNUP_SELECTORS.passwordField).fill(password);
+      await page
+        .getByTestId(SIGNUP_SELECTORS.passwordConfirmationField)
+        .fill(password);
+      await page.getByTestId(SIGNUP_SELECTORS.signupButton).click();
+    });
 
-    await page.getByTestId("login-register-link").click();
-
-    await page.getByTestId("signup-name-field").fill(username);
-    await page.getByTestId("signup-email-field").fill(email);
-    await page.getByTestId("signup-password-field").fill(password);
-    await page.getByTestId("signup-password-confirmation-field").fill(password);
-    await page.getByTestId("signup-submit-button").click();
-
-    await loginPage.loginAndVerifyUser({ email, password, username });
+    await test.step("Step 3: Verify newly created user", () =>
+      loginPage.loginAndVerifyUser({ email, password, username }));
   });
 });

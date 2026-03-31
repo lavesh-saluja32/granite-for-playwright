@@ -1,5 +1,7 @@
 import { Page, expect } from "@playwright/test";
 
+import { CREATE_TASK_SELECTORS } from "../constants/selectors/createTask";
+
 interface TaskName {
   taskName: string;
 }
@@ -9,22 +11,25 @@ interface CreateNewTaskProps extends TaskName {
 }
 
 export default class TaskPage {
-  page: Page;
-
-  constructor(page: Page) {
-    this.page = page;
-  }
+  constructor(private page: Page) {}
 
   createTaskAndVerify = async ({
     taskName,
     userName = "Oliver Smith",
   }: CreateNewTaskProps) => {
     await this.page.getByTestId("navbar-add-todo-link").click();
-    await this.page.getByTestId("form-title-field").fill(taskName);
+    await this.page
+      .getByTestId(CREATE_TASK_SELECTORS.taskTitleField)
+      .fill(taskName);
 
-    await this.page.locator(".css-2b097c-container").click();
-    await this.page.locator(".css-26l3qy-menu").getByText(userName).click();
-    await this.page.getByTestId("form-submit-button").click();
+    await this.page.locator(CREATE_TASK_SELECTORS.memberSelectContainer).click();
+    await this.page
+      .locator(CREATE_TASK_SELECTORS.memberOptionField)
+      .getByText(userName)
+      .click();
+    await this.page
+      .getByTestId(CREATE_TASK_SELECTORS.createTaskButton)
+      .click();
     const taskInDashboard = this.page
       .getByTestId("tasks-pending-table")
       .getByRole("row", {
@@ -59,7 +64,7 @@ export default class TaskPage {
     await starIcon.click();
     await expect(starIcon).toHaveClass(/ri-star-fill/i);
     await expect(
-      this.page.getByTestId("tasks-pending-table").getByRole("row").nth(1)
+      this.page.getByTestId("tasks-pending-table").getByRole("row").nth(1) //// Using nth methods here since we want to verify the first row of the table
     ).toContainText(taskName);
   };
 }
